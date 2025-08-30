@@ -95,78 +95,53 @@ router.get('/:reportId/ai-status', getAIAnalysisStatus);
 // Retry AI analysis for a report
 router.post('/:reportId/ai-retry', retryAIAnalysis);
 
-// Download report file
+// Download report file (serves the actual uploaded file)
+const path = require('path');
+const fs = require('fs');
 router.get('/download/:reportId', async (req, res) => {
   try {
     const { reportId } = req.params;
     const report = await Report.findById(reportId);
-    
     if (!report) {
-      return res.status(404).json({
-        success: false,
-        message: 'Report not found'
-      });
+      return res.status(404).json({ success: false, message: 'Report not found' });
     }
-
-    // Check authorization
     if (req.user.role !== 'caregiver' && report.patientId.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to download this report'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized to download this report' });
     }
-
-    // For demo purposes, return a simple text file
-    // In production, you'd serve the actual file from storage
-    const fileContent = `Report: ${report.title}\nPatient: ${report.patientId}\nDate: ${report.createdAt}\nDescription: ${report.description || 'No description'}`;
-    
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName || 'report.txt'}"`);
-    res.send(fileContent);
+    const filePath = path.join(__dirname, '..', report.fileUrl);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'File not found on server' });
+    }
+    res.setHeader('Content-Type', report.fileType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
+    fs.createReadStream(filePath).pipe(res);
   } catch (error) {
     console.error('Error downloading report:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error downloading report',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error downloading report', error: error.message });
   }
 });
 
-// View report file
+// View report file (serves the actual uploaded file inline)
 router.get('/view/:reportId', async (req, res) => {
   try {
     const { reportId } = req.params;
     const report = await Report.findById(reportId);
-    
     if (!report) {
-      return res.status(404).json({
-        success: false,
-        message: 'Report not found'
-      });
+      return res.status(404).json({ success: false, message: 'Report not found' });
     }
-
-    // Check authorization
     if (req.user.role !== 'caregiver' && report.patientId.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to view this report'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized to view this report' });
     }
-
-    // For demo purposes, return a simple text file
-    // In production, you'd serve the actual file from storage
-    const fileContent = `Report: ${report.title}\nPatient: ${report.patientId}\nDate: ${report.createdAt}\nDescription: ${report.description || 'No description'}`;
-    
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(fileContent);
+    const filePath = path.join(__dirname, '..', report.fileUrl);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'File not found on server' });
+    }
+    res.setHeader('Content-Type', report.fileType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${report.fileName}"`);
+    fs.createReadStream(filePath).pipe(res);
   } catch (error) {
     console.error('Error viewing report:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error viewing report',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error viewing report', error: error.message });
   }
 });
 

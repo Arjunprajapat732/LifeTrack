@@ -12,6 +12,7 @@ const PatientReportDetail = () => {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageModal, setImageModal] = useState({ open: false, src: '' });
 
   // Fetch report details
   useEffect(() => {
@@ -73,10 +74,16 @@ const PatientReportDetail = () => {
       const response = await axios.get(`/api/reports/view/${reportId}`, {
         responseType: 'blob'
       });
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const contentType = response.headers['content-type'];
+      const blob = new Blob([response.data], { type: contentType });
       const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      toast.success('Report opened successfully');
+      // Check if file is an image
+      if (contentType.startsWith('image/')) {
+        setImageModal({ open: true, src: url });
+      } else {
+        window.open(url, '_blank');
+        toast.success('Report opened successfully');
+      }
     } catch (error) {
       console.error('Error viewing report:', error);
       toast.error('Failed to view report');
@@ -218,6 +225,26 @@ const PatientReportDetail = () => {
                 <Eye className="w-4 h-4 mr-2" />
                 View
               </button>
+        {/* Image Modal */}
+        {imageModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+            <div className="bg-white rounded-lg shadow-lg p-4 max-w-2xl w-full flex flex-col items-center relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setImageModal({ open: false, src: '' })}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+              <img
+                src={imageModal.src}
+                alt="Uploaded Report"
+                className="max-h-[70vh] w-auto rounded-lg border"
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
+          </div>
+        )}
               <button
                 onClick={handleDownload}
                 className="btn-primary flex items-center"
@@ -229,90 +256,44 @@ const PatientReportDetail = () => {
           </div>
         </div>
 
-        {/* Report Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Basic Information */}
-          <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Report Information</h2>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Created Date</p>
-                  <p className="text-gray-900">{formatDate(report.createdAt)}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Last Updated</p>
-                  <p className="text-gray-900">{formatDate(report.updatedAt)}</p>
-                </div>
-              </div>
-              
+        {/* Report Details - Full Width */}
+        <div className="card">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Report Information</h2>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <Calendar className="w-5 h-5 text-gray-400 mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Report Type</p>
-                <p className="text-gray-900 capitalize">{report.reportType.replace('_', ' ')}</p>
+                <p className="text-sm font-medium text-gray-500">Created Date</p>
+                <p className="text-gray-900">{formatDate(report.createdAt)}</p>
               </div>
-              
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Visibility</p>
-                <p className="text-gray-900">{report.isPublic ? 'Public' : 'Private'}</p>
-              </div>
-              
-              {report.tags && report.tags.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Tags</p>
-                  <div className="flex flex-wrap gap-2">
-                    {report.tags.map((tag, index) => (
-                      <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-
-          {/* AI Analysis Status */}
-          <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">AI Analysis Status</h2>
-            <div className="space-y-4">
+            <div className="flex items-center">
+              <Clock className="w-5 h-5 text-gray-400 mr-3" />
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Analysis Status</p>
-                <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  report.ai_analysis_status === 'completed' ? 'bg-green-100 text-green-800' :
-                  report.ai_analysis_status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                  report.ai_analysis_status === 'failed' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {report.ai_analysis_status || 'pending'}
-                </span>
+                <p className="text-sm font-medium text-gray-500">Last Updated</p>
+                <p className="text-gray-900">{formatDate(report.updatedAt)}</p>
               </div>
-              
-              {report.ai_analysis_date && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Analysis Date</p>
-                  <p className="text-gray-900">{formatDate(report.ai_analysis_date)}</p>
-                </div>
-              )}
-              
-              {report.ai_analysis_status === 'completed' && report.ai_describe && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">AI Analysis Available</p>
-                  <p className="text-green-600 font-medium">✓ Analysis completed successfully</p>
-                </div>
-              )}
-              
-              {report.ai_analysis_status === 'failed' && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Analysis Status</p>
-                  <p className="text-red-600 font-medium">✗ Analysis failed - please try again</p>
-                </div>
-              )}
             </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Report Type</p>
+              <p className="text-gray-900 capitalize">{report.reportType.replace('_', ' ')}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Visibility</p>
+              <p className="text-gray-900">{report.isPublic ? 'Public' : 'Private'}</p>
+            </div>
+            {report.tags && report.tags.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {report.tags.map((tag, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
