@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Calendar, Pill, Activity, Bell, Clock, TrendingUp, FileText, Upload, Download, Eye } from 'lucide-react';
 import axios from 'axios';

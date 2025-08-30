@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import CaregiverDashboard from './CaregiverDashboard';
-import PatientDashboard from './PatientDashboard';
+import CaregiverDashboard from './caregiver/CaregiverDashboard';
+import PatientDashboard from './patient/PatientDashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
