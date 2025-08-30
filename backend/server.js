@@ -9,6 +9,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contact');
 const patientStatusRoutes = require('./routes/patientStatus');
+const healthDataRoutes = require('./routes/healthData');
 const reportRoutes = require('./routes/reports');
 const reportUploadRoutes = require('./routes/reportUpload');
 const aiRoutes = require('./routes/ai_simple');
@@ -67,6 +68,7 @@ const patientStatusLimiter = rateLimit({
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/patient-status', patientStatusLimiter, patientStatusRoutes); // Apply specific limiter
+app.use('/api/health-data', patientStatusLimiter, healthDataRoutes); // Apply specific limiter
 app.use('/api/reports', reportRoutes);
 app.use('/api/report-upload', reportUploadRoutes);
 app.use('/api/ai', aiRoutes);

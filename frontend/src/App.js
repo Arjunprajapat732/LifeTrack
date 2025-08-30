@@ -14,6 +14,7 @@ import CaregiverTaskCalendarPage from './pages/caregiver/TaskCalendarPage';
 import PatientReportsIndex from './pages/patient/reports/index';
 import PatientReportDetail from './pages/patient/reports/detail';
 import PatientTaskCalendarPage from './pages/patient/TaskCalendarPage';
+import HealthHistory from './pages/patient/HealthHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -93,6 +94,14 @@ function App() {
                element={
                  <ProtectedRoute>
                    <PatientTaskCalendarPage />
+                 </ProtectedRoute>
+               } 
+             />
+             <Route 
+               path="patient/health-history" 
+               element={
+                 <ProtectedRoute>
+                   <HealthHistory />
                  </ProtectedRoute>
                } 
              />

@@ -10,6 +10,7 @@ const PatientDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [patientStatus, setPatientStatus] = useState(null);
+  const [healthData, setHealthData] = useState(null);
   const [reports, setReports] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -80,7 +81,7 @@ const PatientDashboard = () => {
     };
   }, [user?.id]);
 
-  // Fetch patient reports
+  // Fetch patient reports and health data
   useEffect(() => {
     if (!user?.id) {
       // If no user ID, still set loading to false to show the dashboard
@@ -90,19 +91,25 @@ const PatientDashboard = () => {
 
     let isMounted = true;
 
-    const fetchReports = async () => {
-      console.log('📄 Fetching reports for user:', user.id);
+    const fetchData = async () => {
+      console.log('📄 Fetching reports and health data for user:', user.id);
       try {
-        const response = await axios.get('/api/reports/my-reports');
+        const [reportsResponse, healthDataResponse] = await Promise.all([
+          axios.get('/api/reports/my-reports'),
+          axios.get(`/api/health-data/latest/${user.id}`)
+        ]);
+        
         if (isMounted) {
-          setReports(response.data.data.reports);
-          console.log('✅ Reports fetched successfully');
+          setReports(reportsResponse.data.data.reports);
+          setHealthData(healthDataResponse.data.data.healthData);
+          console.log('✅ Reports and health data fetched successfully');
         }
       } catch (error) {
-        console.error('❌ Error fetching reports:', error);
-        // Even if reports fetch fails, we should still show the dashboard
+        console.error('❌ Error fetching data:', error);
+        // Even if fetch fails, we should still show the dashboard
         if (isMounted) {
           setReports([]);
+          setHealthData(null);
         }
       } finally {
         if (isMounted) {
@@ -117,10 +124,11 @@ const PatientDashboard = () => {
         console.log('⏰ Loading timeout reached, showing dashboard');
         setIsLoading(false);
         setReports([]);
+        setHealthData(null);
       }
     }, 10000); // 10 second timeout
 
-    fetchReports();
+    fetchData();
 
     return () => {
       isMounted = false;
@@ -128,32 +136,49 @@ const PatientDashboard = () => {
     };
   }, [user?.id, isLoading]);
 
-  // Update patient status (demo API)
-  const updateStatus = async () => {
+  // Fetch health data
+  const fetchHealthData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await axios.get(`/api/health-data/latest/${user.id}`);
+      setHealthData(response.data.data.healthData);
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+    }
+  };
+
+  // Update health data (creates new health record)
+  const updateHealthData = async () => {
     if (!user?.id) {
       toast.error('User ID not available');
       return;
     }
     
     if (isStatusLoading) {
-      toast.error('Status update already in progress');
+      toast.error('Health data update already in progress');
       return;
     }
     
     setIsStatusLoading(true);
     try {
-      await axios.put(`/api/patient-status/update/${user.id}`);
-      toast.success('Status updated successfully');
+      await axios.put(`/api/health-data/update/${user.id}`);
+      toast.success('Health data updated successfully');
       
-      // Refresh the status after update
-      const response = await axios.get(`/api/patient-status/latest/${user.id}`);
-      setPatientStatus(response.data.data.status);
+      // Refresh both status and health data after update
+      const [statusResponse, healthDataResponse] = await Promise.all([
+        axios.get(`/api/patient-status/latest/${user.id}`),
+        axios.get(`/api/health-data/latest/${user.id}`)
+      ]);
+      
+      setPatientStatus(statusResponse.data.data.status);
+      setHealthData(healthDataResponse.data.data.healthData);
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating health data:', error);
       if (error.response?.status === 429) {
         toast.error('Rate limit reached. Please wait before trying again.');
       } else {
-        toast.error('Failed to update status');
+        toast.error('Failed to update health data');
       }
     } finally {
       setIsStatusLoading(false);
@@ -263,9 +288,9 @@ const PatientDashboard = () => {
                 <Heart className="w-6 h-6 text-primary-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Health Score</p>
+                <p className="text-sm font-medium text-gray-600">Heart Rate</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {patientStatus?.healthScore || 85}%
+                  {healthData?.vitals?.heart_rate_bpm || patientStatus?.vitalSigns?.heartRate?.value || 72} bpm
                 </p>
               </div>
             </div>
@@ -274,11 +299,13 @@ const PatientDashboard = () => {
           <div className="card">
             <div className="flex items-center">
               <div className="p-3 bg-healthcare-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-healthcare-600" />
+                <Activity className="w-6 h-6 text-healthcare-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Next Appointment</p>
-                <p className="text-2xl font-bold text-gray-900">Tomorrow</p>
+                <p className="text-sm font-medium text-gray-600">Steps Today</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {healthData?.activity?.steps?.toLocaleString() || '0'}
+                </p>
               </div>
             </div>
           </div>
@@ -286,11 +313,13 @@ const PatientDashboard = () => {
           <div className="card">
             <div className="flex items-center">
               <div className="p-3 bg-secondary-100 rounded-lg">
-                <Pill className="w-6 h-6 text-secondary-600" />
+                <TrendingUp className="w-6 h-6 text-secondary-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Medications</p>
-                <p className="text-2xl font-bold text-gray-900">4</p>
+                <p className="text-sm font-medium text-gray-600">BMI</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {healthData?.body_measurements?.body_mass_index || 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -310,82 +339,84 @@ const PatientDashboard = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Health Overview */}
+          {/* Left Column - Health Data and Activity */}
           <div className="lg:col-span-2">
-            <div className="card">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Today's Health Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Vital Signs */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Vital Signs</h3>
-                                     <div className="space-y-3">
-                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                       <span className="text-sm font-medium text-gray-700">Blood Pressure</span>
-                       <span className="text-sm text-gray-900">
-                         {patientStatus?.vitalSigns?.bloodPressure?.systolic || 120}/{patientStatus?.vitalSigns?.bloodPressure?.diastolic || 80} mmHg
-                       </span>
-                     </div>
-                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                       <span className="text-sm font-medium text-gray-700">Heart Rate</span>
-                       <span className="text-sm text-gray-900">
-                         {patientStatus?.vitalSigns?.heartRate?.value || 72} bpm
-                       </span>
-                     </div>
-                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                       <span className="text-sm font-medium text-gray-700">Temperature</span>
-                       <span className="text-sm text-gray-900">
-                         {patientStatus?.vitalSigns?.temperature?.value || 98.6}°F
-                       </span>
-                     </div>
-                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                       <span className="text-sm font-medium text-gray-700">Weight</span>
-                       <span className="text-sm text-gray-900">
-                         {patientStatus?.vitalSigns?.weight?.value || 165} lbs
-                       </span>
-                     </div>
-                   </div>
-                </div>
+            {/* Comprehensive Health Data */}
+            {healthData && (
+              <div className="card">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Comprehensive Health Data</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Body Measurements */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-800">Body Measurements</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Height</span>
+                        <span className="text-sm text-gray-900">{healthData.body_measurements?.height_cm} cm</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Weight</span>
+                        <span className="text-sm text-gray-900">{healthData.body_measurements?.weight_kg} kg</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">BMI</span>
+                        <span className="text-sm text-gray-900">{healthData.body_measurements?.body_mass_index}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Body Fat</span>
+                        <span className="text-sm text-gray-900">{healthData.body_measurements?.body_fat_percentage}%</span>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* Medication Schedule */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Today's Medications</h3>
-                                     <div className="space-y-3">
-                     {patientStatus?.medicationStatus?.map((med, index) => (
-                       <div key={index} className={`flex items-center space-x-3 p-3 rounded-lg ${
-                         med.taken ? 'bg-green-50' : 'bg-yellow-50'
-                       }`}>
-                         <div className={`w-2 h-2 rounded-full ${
-                           med.taken ? 'bg-green-500' : 'bg-yellow-500'
-                         }`}></div>
-                         <div className="flex-1">
-                           <p className="text-sm font-medium text-gray-900">{med.medicationName}</p>
-                           <p className="text-sm text-gray-600">
-                             {med.taken ? 'Taken' : 'Pending'} - {new Date(med.scheduledTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                           </p>
-                         </div>
-                       </div>
-                     )) || (
-                       <>
-                         <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                           <div className="flex-1">
-                             <p className="text-sm font-medium text-gray-900">Metformin 500mg</p>
-                             <p className="text-sm text-gray-600">8:00 AM - Taken</p>
-                           </div>
-                         </div>
-                         <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
-                           <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                           <div className="flex-1">
-                             <p className="text-sm font-medium text-gray-900">Lisinopril 10mg</p>
-                             <p className="text-sm text-gray-600">8:00 AM - Pending</p>
-                           </div>
-                         </div>
-                       </>
-                     )}
-                   </div>
+                  {/* Activity Data */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-800">Activity</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Steps</span>
+                        <span className="text-sm text-gray-900">{healthData.activity?.steps?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Distance</span>
+                        <span className="text-sm text-gray-900">{healthData.activity?.distance_walked_km} km</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Exercise</span>
+                        <span className="text-sm text-gray-900">{healthData.activity?.exercise_minutes} min</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Calories</span>
+                        <span className="text-sm text-gray-900">{healthData.activity?.active_energy_burned_kcal} kcal</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sleep Data */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-800">Sleep</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Duration</span>
+                        <span className="text-sm text-gray-900">{Math.floor(healthData.sleep?.sleep_duration_minutes / 60)}h {healthData.sleep?.sleep_duration_minutes % 60}m</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Deep Sleep</span>
+                        <span className="text-sm text-gray-900">{healthData.sleep?.sleep_stages?.deep_sleep_minutes} min</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">REM Sleep</span>
+                        <span className="text-sm text-gray-900">{healthData.sleep?.sleep_stages?.rem_sleep_minutes} min</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                        <span className="text-sm font-medium text-gray-700">Light Sleep</span>
+                        <span className="text-sm text-gray-900">{healthData.sleep?.sleep_stages?.light_sleep_minutes} min</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Recent Activity */}
             <div className="card mt-6">
@@ -425,11 +456,11 @@ const PatientDashboard = () => {
                <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
                <div className="space-y-3">
                                    <button 
-                    onClick={updateStatus}
+                    onClick={updateHealthData}
                     disabled={isStatusLoading}
                     className="w-full btn-primary text-left"
                   >
-                    {isStatusLoading ? 'Updating...' : 'Update Status'}
+                    {isStatusLoading ? 'Updating...' : 'Update Health Data'}
                   </button>
                  <button 
                    onClick={() => setShowUploadModal(true)}
@@ -440,12 +471,18 @@ const PatientDashboard = () => {
                  <button className="w-full btn-secondary text-left">
                    Contact Caregiver
                  </button>
-                 <button 
-                   onClick={() => navigate('/patient/reports')}
-                   className="w-full btn-warm text-left"
-                 >
-                   View Reports
-                 </button>
+                                   <button 
+                    onClick={() => navigate('/patient/reports')}
+                    className="w-full btn-warm text-left"
+                  >
+                    View Reports
+                  </button>
+                  <button 
+                    onClick={() => navigate('/patient/health-history')}
+                    className="w-full btn-healthcare text-left"
+                  >
+                    Health History
+                  </button>
                  <button 
                    onClick={() => setShowHealthAssistance(true)}
                    className="w-full btn-primary text-left flex items-center space-x-2"
@@ -625,46 +662,7 @@ const PatientDashboard = () => {
          </div>
        )}
 
-       {/* Reports Section */}
-       <div className="mt-8">
-         <div className="card">
-           <h2 className="text-xl font-bold text-gray-900 mb-6">My Reports</h2>
-           {reports.length > 0 ? (
-             <div className="space-y-4">
-               {reports.map((report) => (
-                 <div key={report._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                   <div className="flex items-center space-x-4">
-                     <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-healthcare-600 rounded-full flex items-center justify-center">
-                       <FileText className="w-5 h-5 text-white" />
-                     </div>
-                     <div>
-                       <p className="text-sm font-medium text-gray-900">{report.title}</p>
-                       <p className="text-sm text-gray-600">
-                         {report.reportType.replace('_', ' ')} • {new Date(report.createdAt).toLocaleDateString()}
-                       </p>
-                     </div>
-                   </div>
-                   <div className="flex items-center space-x-2">
-                     <span className={`px-2 py-1 text-xs rounded-full ${
-                       report.status === 'approved' ? 'bg-green-100 text-green-800' :
-                       report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                       report.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                       'bg-gray-100 text-gray-800'
-                     }`}>
-                       {report.status}
-                     </span>
-                     <button className="p-2 text-gray-400 hover:text-gray-600">
-                       <Eye className="w-4 h-4" />
-                     </button>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           ) : (
-             <p className="text-gray-600 text-center py-8">No reports uploaded yet.</p>
-           )}
-         </div>
-       </div>
+       
 
        {/* AI Health Assistance Modal */}
        <HealthAssistance 
