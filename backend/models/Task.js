@@ -15,6 +15,11 @@ const taskSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  patientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
