@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, X, Mic, MicOff, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react';
+import { Send, Bot, User, X, Mic, MicOff, Volume2, VolumeX, Wifi, WifiOff, Play, Pause } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -9,9 +9,11 @@ const HealthAssistance = ({ isOpen, onClose, userRole = 'patient' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [retryCount, setRetryCount] = useState(0);
+  const [lastResponse, setLastResponse] = useState('');
   
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -172,6 +174,15 @@ const HealthAssistance = ({ isOpen, onClose, userRole = 'patient' }) => {
     };
   }, []);
 
+  // Stop speaking when modal closes
+  useEffect(() => {
+    if (!isOpen && speechRef.current && (speechRef.current.speaking || speechRef.current.paused)) {
+      speechRef.current.cancel();
+      setIsSpeaking(false);
+      setIsPaused(false);
+    }
+  }, [isOpen]);
+
   // Network status monitoring
   useEffect(() => {
     const handleOnline = () => {
@@ -231,11 +242,50 @@ const HealthAssistance = ({ isOpen, onClose, userRole = 'patient' }) => {
     utterance.pitch = 1;
     utterance.volume = 0.8;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setIsPaused(false);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
 
     speechRef.current.speak(utterance);
+  };
+
+  // Handle speak button click
+  const handleSpeakClick = () => {
+    if (!lastResponse) {
+      toast.error('No response to speak. Please send a message first.');
+      return;
+    }
+    
+    if (!voiceEnabled) {
+      toast.error('Voice is disabled. Please enable voice first.');
+      return;
+    }
+
+    // If currently speaking, pause it
+    if (isSpeaking && !isPaused) {
+      speechRef.current.pause();
+      setIsPaused(true);
+      toast.success('Speech paused');
+    }
+    // If paused, resume it
+    else if (isPaused) {
+      speechRef.current.resume();
+      setIsPaused(false);
+      toast.success('Speech resumed');
+    }
+    // If not speaking, start speaking
+    else {
+      speakText(lastResponse);
+    }
   };
 
   // Start listening for voice input with retry mechanism
@@ -342,9 +392,9 @@ const HealthAssistance = ({ isOpen, onClose, userRole = 'patient' }) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      setLastResponse(response.data.data.response);
       
-      // Speak the AI response if voice is enabled
-      speakText(response.data.data.response);
+      // Don't auto-speak - user will click speak icon if they want to hear it
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to get response. Please try again.');
@@ -404,6 +454,28 @@ const HealthAssistance = ({ isOpen, onClose, userRole = 'patient' }) => {
               title={voiceEnabled ? 'Disable Voice' : 'Enable Voice'}
             >
               {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+            
+            {/* Speak Button */}
+            <button
+              onClick={handleSpeakClick}
+              disabled={!lastResponse || !voiceEnabled}
+              className={`p-2 rounded-full transition-colors ${
+                lastResponse && voiceEnabled
+                  ? (isSpeaking || isPaused)
+                    ? 'bg-blue-500 bg-opacity-20 hover:bg-opacity-30'
+                    : 'bg-white bg-opacity-20 hover:bg-opacity-30'
+                  : 'bg-gray-500 bg-opacity-20 cursor-not-allowed'
+              }`}
+              title={lastResponse ? (isPaused ? 'Resume Speech' : isSpeaking ? 'Pause Speech' : 'Speak Last Response') : 'No response to speak'}
+            >
+              {isPaused ? (
+                <Play className="w-4 h-4" />
+              ) : isSpeaking ? (
+                <Pause className="w-4 h-4 animate-pulse" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
             </button>
             
             {/* Debug Button (only in development) */}
