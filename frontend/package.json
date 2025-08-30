@@ -53,5 +53,5 @@
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7"
   },
-  "proxy": "http://44.229.227.142:5000/"
+  "proxy": "https://lifetrack-zx0z.onrender.com/"
 }
