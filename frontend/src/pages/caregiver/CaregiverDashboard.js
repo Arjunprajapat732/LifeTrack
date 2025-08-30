@@ -395,7 +395,7 @@ const CaregiverDashboard = () => {
                </div>
              </div>
              
-             <div className="mt-6 flex space-x-3">
+             {/* <div className="mt-6 flex space-x-3">
                <button 
                  onClick={() => viewPatientReports(selectedPatient)}
                  className="btn-primary"
@@ -408,7 +408,7 @@ const CaregiverDashboard = () => {
                >
                  Close
                </button>
-             </div>
+             </div> */}
            </div>
          </div>
        )}
