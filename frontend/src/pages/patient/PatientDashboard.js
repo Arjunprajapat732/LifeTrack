@@ -531,31 +531,7 @@ const PatientDashboard = () => {
               </div>
             </div>
 
-            {/* Patient Profile */}
-            <div className="card mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Your Profile</h2>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-healthcare-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">
-                      {user?.firstName?.[0]}{user?.lastName?.[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {user?.firstName} {user?.lastName}
-                    </p>
-                    <p className="text-sm text-gray-600 capitalize">{user?.role}</p>
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 mb-2">Email: {user?.email}</p>
-                  {user?.phone && (
-                    <p className="text-sm text-gray-600">Phone: {user?.phone}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+
                      </div>
          </div>
        </div>

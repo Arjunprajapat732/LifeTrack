@@ -16,6 +16,7 @@ const CaregiverDashboard = () => {
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [showHealthAssistance, setShowHealthAssistance] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAlerts, setShowAlerts] = useState(true); // New state for alerts visibility
 
   // Fetch all patients and their status
   useEffect(() => {
@@ -132,6 +133,112 @@ const CaregiverDashboard = () => {
           </div>
         </div>
 
+        {/* Recent Alerts - Full Width Row */}
+        {showAlerts && (
+          <div className="card mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Recent Alerts</h2>
+              <div className="flex items-center space-x-3">
+                <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                  View All Alerts
+                </button>
+                <button 
+                  onClick={() => setShowAlerts(false)}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                >
+                  All Clear
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-start space-x-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="w-3 h-3 bg-red-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-900">High Blood Pressure</p>
+                  <p className="text-sm text-red-700">Mary Smith - 160/95 mmHg</p>
+                  <p className="text-xs text-red-600 mt-1">2 hours ago</p>
+                  <button className="text-xs text-red-600 hover:text-red-700 font-medium mt-2">
+                    Take Action →
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-900">Missed Medication</p>
+                  <p className="text-sm text-yellow-700">Robert Johnson - Morning dose</p>
+                  <p className="text-xs text-yellow-600 mt-1">4 hours ago</p>
+                  <button className="text-xs text-yellow-600 hover:text-yellow-700 font-medium mt-2">
+                    Reschedule →
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-900">Appointment Reminder</p>
+                  <p className="text-sm text-blue-700">John Doe - Tomorrow 9:00 AM</p>
+                  <p className="text-xs text-blue-600 mt-1">1 day ago</p>
+                  <button className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-2">
+                    View Details →
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="w-3 h-3 bg-orange-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-orange-900">Low Blood Sugar</p>
+                  <p className="text-sm text-orange-700">Sarah Wilson - 65 mg/dL</p>
+                  <p className="text-xs text-orange-600 mt-1">6 hours ago</p>
+                  <button className="text-xs text-orange-600 hover:text-orange-700 font-medium mt-2">
+                    Check Status →
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-purple-900">Weight Change</p>
+                  <p className="text-sm text-purple-700">Michael Brown - +5 lbs this week</p>
+                  <p className="text-xs text-purple-600 mt-1">1 day ago</p>
+                  <button className="text-xs text-purple-600 hover:text-purple-700 font-medium mt-2">
+                    Review Diet →
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="w-3 h-3 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-900">Exercise Goal Met</p>
+                  <p className="text-sm text-green-700">Lisa Davis - 30 min walk completed</p>
+                  <p className="text-xs text-green-600 mt-1">2 days ago</p>
+                  <button className="text-xs text-green-600 hover:text-green-700 font-medium mt-2">
+                    View Progress →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Show Alerts Button (when alerts are hidden) */}
+        {!showAlerts && (
+          <div className="mb-8">
+            <button 
+              onClick={() => setShowAlerts(true)}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center space-x-2"
+            >
+              <Bell className="w-4 h-4" />
+              <span>Show Recent Alerts</span>
+            </button>
+          </div>
+        )}
+
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Patient List */}
@@ -234,64 +341,7 @@ const CaregiverDashboard = () => {
                </div>
              </div>
 
-            {/* Alerts */}
-            <div className="card mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Alerts</h2>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
-                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium text-red-900">High Blood Pressure</p>
-                    <p className="text-sm text-red-700">Mary Smith - 160/95 mmHg</p>
-                    <p className="text-xs text-red-600">2 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium text-yellow-900">Missed Medication</p>
-                    <p className="text-sm text-yellow-700">Robert Johnson - Morning dose</p>
-                    <p className="text-xs text-yellow-600">4 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">Appointment Reminder</p>
-                    <p className="text-sm text-blue-700">John Doe - Tomorrow 9:00 AM</p>
-                    <p className="text-xs text-blue-600">1 day ago</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Caregiver Profile */}
-            <div className="card mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Your Profile</h2>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-healthcare-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">
-                      {user?.firstName?.[0]}{user?.lastName?.[0]}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {user?.firstName} {user?.lastName}
-                    </p>
-                    <p className="text-sm text-gray-600 capitalize">{user?.role}</p>
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 mb-2">Email: {user?.email}</p>
-                  {user?.phone && (
-                    <p className="text-sm text-gray-600">Phone: {user?.phone}</p>
-                  )}
-                </div>
-              </div>
-            </div>
                      </div>
          </div>
        </div>
