@@ -268,29 +268,6 @@ const ReportDetail = () => {
                 <p className="text-sm font-medium text-gray-500 mb-1">Uploaded By</p>
                 <p className="text-gray-900">{report.uploadedBy?.firstName} {report.uploadedBy?.lastName}</p>
               </div>
-            </div>
-          </div>
-
-          {/* File Information */}
-          <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">File Information</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">File Name</p>
-                <p className="text-gray-900">{report.fileName}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">File Type</p>
-                <p className="text-gray-900">{report.fileType}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">File Size</p>
-                <p className="text-gray-900">
-                  {report.fileSize ? `${(report.fileSize / 1024 / 1024).toFixed(2)} MB` : 'Unknown'}
-                </p>
-              </div>
               
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Visibility</p>
@@ -311,6 +288,45 @@ const ReportDetail = () => {
               )}
             </div>
           </div>
+
+          {/* AI Analysis Status */}
+          <div className="card">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">AI Analysis Status</h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Analysis Status</p>
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                  report.ai_analysis_status === 'completed' ? 'bg-green-100 text-green-800' :
+                  report.ai_analysis_status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                  report.ai_analysis_status === 'failed' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {report.ai_analysis_status || 'pending'}
+                </span>
+              </div>
+              
+              {report.ai_analysis_date && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Analysis Date</p>
+                  <p className="text-gray-900">{formatDate(report.ai_analysis_date)}</p>
+                </div>
+              )}
+              
+              {report.ai_analysis_status === 'completed' && report.ai_describe && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">AI Analysis Available</p>
+                  <p className="text-green-600 font-medium">✓ Analysis completed successfully</p>
+                </div>
+              )}
+              
+              {report.ai_analysis_status === 'failed' && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Analysis Status</p>
+                  <p className="text-red-600 font-medium">✗ Analysis failed - please try again</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Description */}
@@ -319,6 +335,54 @@ const ReportDetail = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
             <div className="prose max-w-none">
               <p className="text-gray-700 whitespace-pre-wrap">{report.description}</p>
+            </div>
+          </div>
+        )}
+
+        {/* AI Analysis */}
+        {report.ai_analysis_status === 'completed' && report.ai_describe && (
+          <div className="card mt-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">AI Analysis</h2>
+            <div className="prose max-w-none">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                <p className="text-blue-800 text-sm font-medium">
+                  🤖 AI-Powered Medical Report Analysis
+                </p>
+              </div>
+              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {report.ai_describe}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Analysis Loading/Failed States */}
+        {report.ai_analysis_status === 'processing' && (
+          <div className="card mt-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">AI Analysis</h2>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">AI analysis is in progress...</p>
+              <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
+            </div>
+          </div>
+        )}
+
+        {report.ai_analysis_status === 'failed' && (
+          <div className="card mt-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">AI Analysis</h2>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <p className="text-red-600 font-medium mb-2">AI analysis failed</p>
+              <p className="text-gray-600 mb-4">The AI analysis could not be completed for this report.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="btn-secondary"
+              >
+                Retry Analysis
+              </button>
             </div>
           </div>
         )}

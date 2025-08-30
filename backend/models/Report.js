@@ -54,7 +54,17 @@ const reportSchema = new mongoose.Schema({
     ref: 'User'
   },
   reviewNotes: String,
-  reviewDate: Date
+  reviewDate: Date,
+  ai_describe: {
+    type: String,
+    default: null
+  },
+  ai_analysis_status: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: 'pending'
+  },
+  ai_analysis_date: Date
 }, {
   timestamps: true
 });

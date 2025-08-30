@@ -11,6 +11,7 @@ const contactRoutes = require('./routes/contact');
 const patientStatusRoutes = require('./routes/patientStatus');
 const reportRoutes = require('./routes/reports');
 const reportUploadRoutes = require('./routes/reportUpload');
+// const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -67,6 +68,8 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/patient-status', patientStatusLimiter, patientStatusRoutes); // Apply specific limiter
 app.use('/api/reports', reportRoutes);
 app.use('/api/report-upload', reportUploadRoutes);
+// AI routes - temporarily disabled due to import issues
+// app.use('/api/ai', aiRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

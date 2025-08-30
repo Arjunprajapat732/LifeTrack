@@ -1,6 +1,9 @@
 const ReportUpload = require('../models/ReportUpload');
+const AIAnalysisService = require('../services/aiAnalysisService');
 const fs = require('fs');
 const path = require('path');
+
+console.log('🔧 AIAnalysisService imported in reportUploadController:', typeof AIAnalysisService);
 
 // Initialize upload
 exports.initializeUpload = async (req, res) => {
@@ -109,6 +112,25 @@ exports.uploadFile = async (req, res) => {
       try {
         await upload.markCompleted();
         console.log(`Upload ${uploadId} completed successfully`);
+        
+        // Trigger AI analysis in the background
+        console.log('🤖 Triggering AI analysis for upload:', uploadId);
+        const filePath = path.join(__dirname, '..', upload.filePath);
+        
+        setImmediate(async () => {
+          try {
+            console.log('🚀 Starting AI analysis in background for upload:', uploadId);
+            console.log('📁 File path:', filePath);
+            console.log('📁 File exists:', fs.existsSync(filePath));
+            
+            await AIAnalysisService.processUploadAnalysis(uploadId, filePath);
+            console.log('✅ AI analysis completed for upload:', uploadId);
+          } catch (error) {
+            console.error('❌ AI analysis failed for upload:', uploadId, error);
+            console.error('❌ Error stack:', error.stack);
+          }
+        });
+        
       } catch (error) {
         console.error(`Error completing upload ${uploadId}:`, error);
       }

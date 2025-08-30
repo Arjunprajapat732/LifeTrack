@@ -104,7 +104,19 @@ const reportUploadSchema = new mongoose.Schema({
   maxRetries: {
     type: Number,
     default: 3
-  }
+  },
+  
+  // AI Analysis fields
+  ai_describe: {
+    type: String,
+    default: null
+  },
+  ai_analysis_status: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: 'pending'
+  },
+  ai_analysis_date: Date
 }, {
   timestamps: true
 });

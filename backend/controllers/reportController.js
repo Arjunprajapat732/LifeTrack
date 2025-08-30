@@ -1,8 +1,18 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
+const AIAnalysisService = require('../services/aiAnalysisService');
+const path = require('path');
+
+console.log('🔧 AIAnalysisService imported:', typeof AIAnalysisService);
+console.log('🔧 AIAnalysisService.processReportAnalysis:', typeof AIAnalysisService.processReportAnalysis);
 
 // Upload a new report
 exports.uploadReport = async (req, res) => {
+  console.log('🚨 UPLOAD REPORT FUNCTION EXECUTED! 🚨');
+  console.log('📤 Upload report function called!');
+  console.log('📤 Request body:', req.body);
+  console.log('📤 Request file:', req.file);
+  
   try {
     const { title, description, reportType, tags, isPublic } = req.body;
     const { file } = req;
@@ -33,9 +43,37 @@ exports.uploadReport = async (req, res) => {
     const newReport = new Report(reportData);
     await newReport.save();
 
+    // Trigger AI analysis in the background (non-blocking)
+    const filePath = path.join(__dirname, '..', file.path || `uploads/${file.filename}`);
+    
+    // Alternative file path construction
+    const altFilePath = path.join(__dirname, '..', 'uploads', file.filename);
+    
+    console.log('🤖 AI Analysis Debug:');
+    console.log('  - Report ID:', newReport._id);
+    console.log('  - File Path:', filePath);
+    console.log('  - File exists:', require('fs').existsSync(filePath));
+    console.log('  - Alt File Path:', altFilePath);
+    console.log('  - Alt File exists:', require('fs').existsSync(altFilePath));
+    console.log('  - File object:', { filename: file.filename, path: file.path, originalname: file.originalname });
+    
+    // Start AI analysis asynchronously
+    setImmediate(async () => {
+      console.log('🚀 Starting AI analysis in background...');
+      try {
+        console.log('📞 Calling AIAnalysisService.processReportAnalysis...');
+        await AIAnalysisService.processReportAnalysis(newReport._id, filePath);
+        console.log('✅ AI analysis completed successfully');
+      } catch (error) {
+        console.error('❌ Background AI analysis failed:', error);
+        console.error('❌ Error stack:', error.stack);
+        // Don't throw error here as it's background processing
+      }
+    });
+
     res.status(201).json({
       success: true,
-      message: 'Report uploaded successfully',
+      message: 'Report uploaded successfully. AI analysis is being processed in the background.',
       data: {
         report: newReport
       }
@@ -313,6 +351,109 @@ exports.deleteReport = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting report',
+      error: error.message
+    });
+  }
+};
+
+// Get AI analysis status for a report
+exports.getAIAnalysisStatus = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const userId = req.user.id;
+
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'caregiver' && report.patientId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this report'
+      });
+    }
+
+    const analysisStatus = await AIAnalysisService.getAnalysisStatus(reportId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        analysisStatus,
+        reportId
+      }
+    });
+  } catch (error) {
+    console.error('Error getting AI analysis status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error getting AI analysis status',
+      error: error.message
+    });
+  }
+};
+
+// Retry AI analysis for a report
+exports.retryAIAnalysis = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const userId = req.user.id;
+
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'caregiver' && report.patientId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to retry AI analysis for this report'
+      });
+    }
+
+    // Check if AI analysis is in a retryable state
+    if (report.ai_analysis_status !== 'failed') {
+      return res.status(400).json({
+        success: false,
+        message: 'AI analysis can only be retried if it previously failed'
+      });
+    }
+
+    // Get the file path
+    const filePath = path.join(__dirname, '..', report.fileUrl.replace('/uploads/', 'uploads/'));
+    
+    // Retry AI analysis in the background
+    setImmediate(async () => {
+      try {
+        await AIAnalysisService.retryAnalysis(reportId, filePath);
+      } catch (error) {
+        console.error('Background AI analysis retry failed:', error);
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'AI analysis retry initiated. Check status for updates.',
+      data: {
+        reportId,
+        status: 'retrying'
+      }
+    });
+  } catch (error) {
+    console.error('Error retrying AI analysis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrying AI analysis',
       error: error.message
     });
   }

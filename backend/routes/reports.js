@@ -10,8 +10,14 @@ const {
   getPatientReportsByCaregiver,
   getReportDetails,
   updateReportStatus,
-  deleteReport
+  deleteReport,
+  getAIAnalysisStatus,
+  retryAIAnalysis
 } = require('../controllers/reportController');
+
+console.log('🔧 Routes Debug:');
+console.log('  - uploadReport function:', typeof uploadReport);
+console.log('  - uploadReport is function:', typeof uploadReport === 'function');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -52,6 +58,12 @@ const upload = multer({
 // All routes require authentication
 router.use(auth);
 
+// Test route to see if routes are working
+router.get('/test', (req, res) => {
+  console.log('🧪 Test route hit!');
+  res.json({ message: 'Test route working' });
+});
+
 // Upload report
 router.post('/upload', upload.single('file'), uploadReport);
 
@@ -72,6 +84,12 @@ router.put('/:reportId/status', updateReportStatus);
 
 // Delete report
 router.delete('/:reportId', deleteReport);
+
+// Get AI analysis status for a report
+router.get('/:reportId/ai-status', getAIAnalysisStatus);
+
+// Retry AI analysis for a report
+router.post('/:reportId/ai-retry', retryAIAnalysis);
 
 // Download report file
 router.get('/download/:reportId', async (req, res) => {
