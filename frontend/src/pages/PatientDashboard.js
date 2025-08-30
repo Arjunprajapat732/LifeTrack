@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Heart, Calendar, Pill, Activity, Bell, Clock, TrendingUp, FileText, Upload, Download, Eye } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const PatientDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patientStatus, setPatientStatus] = useState(null);
   const [reports, setReports] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -78,7 +80,11 @@ const PatientDashboard = () => {
 
   // Fetch patient reports
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      // If no user ID, still set loading to false to show the dashboard
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
 
@@ -92,6 +98,10 @@ const PatientDashboard = () => {
         }
       } catch (error) {
         console.error('❌ Error fetching reports:', error);
+        // Even if reports fetch fails, we should still show the dashboard
+        if (isMounted) {
+          setReports([]);
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -99,12 +109,22 @@ const PatientDashboard = () => {
       }
     };
 
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.log('⏰ Loading timeout reached, showing dashboard');
+        setIsLoading(false);
+        setReports([]);
+      }
+    }, 10000); // 10 second timeout
+
     fetchReports();
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
     };
-  }, [user?.id]);
+  }, [user?.id, isLoading]);
 
   // Update patient status (demo API)
   const updateStatus = async () => {
@@ -188,12 +208,33 @@ const PatientDashboard = () => {
   };
 
   // Show loading state while user data is being loaded
-  if (isLoading || !user) {
+  if (isLoading && user) {
     return (
       <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no user data
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600 mb-4">Please log in to access your dashboard.</p>
+          <button 
+            onClick={() => window.location.href = '/login'} 
+            className="btn-primary"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -252,7 +293,7 @@ const PatientDashboard = () => {
             </div>
           </div>
 
-          <div className="card">
+          <div className="card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/patient/reports')}>
             <div className="flex items-center">
               <div className="p-3 bg-warm-100 rounded-lg">
                 <Bell className="w-6 h-6 text-warm-600" />
@@ -400,7 +441,10 @@ const PatientDashboard = () => {
                  <button className="w-full btn-secondary text-left">
                    Contact Caregiver
                  </button>
-                 <button className="w-full btn-warm text-left">
+                 <button 
+                   onClick={() => navigate('/patient/reports')}
+                   className="w-full btn-warm text-left"
+                 >
                    View Reports
                  </button>
                </div>

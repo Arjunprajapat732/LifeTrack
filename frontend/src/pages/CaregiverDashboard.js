@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { User, Calendar, Activity, Bell, Heart, Clock, Users, FileText, Eye, Download, Search } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const CaregiverDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [reports, setReports] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -99,7 +101,7 @@ const CaregiverDashboard = () => {
             </div>
           </div>
 
-                     <div className="card">
+                     <div className="card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/caregiver/reports')}>
              <div className="flex items-center">
                <div className="p-3 bg-secondary-100 rounded-lg">
                  <FileText className="w-6 h-6 text-secondary-600" />
@@ -199,7 +201,7 @@ const CaregiverDashboard = () => {
                    Schedule Visit
                  </button>
                  <button 
-                   onClick={() => setShowReportsModal(true)}
+                   onClick={() => navigate('/caregiver/reports')}
                    className="w-full btn-healthcare text-left"
                  >
                    View All Reports
@@ -390,10 +392,50 @@ const CaregiverDashboard = () => {
                          }`}>
                            {report.status}
                          </span>
-                         <button className="p-2 text-gray-400 hover:text-gray-600">
+                         <button 
+                           onClick={async () => {
+                             try {
+                               const response = await axios.get(`/api/reports/view/${report._id}`, {
+                                 responseType: 'blob'
+                               });
+                               const blob = new Blob([response.data], { type: response.headers['content-type'] });
+                               const url = window.URL.createObjectURL(blob);
+                               window.open(url, '_blank');
+                               toast.success('Report opened successfully');
+                             } catch (error) {
+                               console.error('Error viewing report:', error);
+                               toast.error('Failed to view report');
+                             }
+                           }}
+                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                           title="View report"
+                         >
                            <Eye className="w-4 h-4" />
                          </button>
-                         <button className="p-2 text-gray-400 hover:text-gray-600">
+                         <button 
+                           onClick={async () => {
+                             try {
+                               const response = await axios.get(`/api/reports/download/${report._id}`, {
+                                 responseType: 'blob'
+                               });
+                               const blob = new Blob([response.data], { type: response.headers['content-type'] });
+                               const url = window.URL.createObjectURL(blob);
+                               const a = document.createElement('a');
+                               a.href = url;
+                               a.download = report.fileName || `${report.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+                               document.body.appendChild(a);
+                               a.click();
+                               document.body.removeChild(a);
+                               window.URL.revokeObjectURL(url);
+                               toast.success('Report downloaded successfully');
+                             } catch (error) {
+                               console.error('Error downloading report:', error);
+                               toast.error('Failed to download report');
+                             }
+                           }}
+                           className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                           title="Download report"
+                         >
                            <Download className="w-4 h-4" />
                          </button>
                        </div>

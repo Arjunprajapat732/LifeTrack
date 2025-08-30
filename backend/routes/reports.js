@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { auth } = require('../middlewares/auth');
+const Report = require('../models/Report');
 const {
   uploadReport,
   getPatientReports,
@@ -71,5 +72,80 @@ router.put('/:reportId/status', updateReportStatus);
 
 // Delete report
 router.delete('/:reportId', deleteReport);
+
+// Download report file
+router.get('/download/:reportId', async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const report = await Report.findById(reportId);
+    
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'caregiver' && report.patientId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to download this report'
+      });
+    }
+
+    // For demo purposes, return a simple text file
+    // In production, you'd serve the actual file from storage
+    const fileContent = `Report: ${report.title}\nPatient: ${report.patientId}\nDate: ${report.createdAt}\nDescription: ${report.description || 'No description'}`;
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.fileName || 'report.txt'}"`);
+    res.send(fileContent);
+  } catch (error) {
+    console.error('Error downloading report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error downloading report',
+      error: error.message
+    });
+  }
+});
+
+// View report file
+router.get('/view/:reportId', async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const report = await Report.findById(reportId);
+    
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'caregiver' && report.patientId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this report'
+      });
+    }
+
+    // For demo purposes, return a simple text file
+    // In production, you'd serve the actual file from storage
+    const fileContent = `Report: ${report.title}\nPatient: ${report.patientId}\nDate: ${report.createdAt}\nDescription: ${report.description || 'No description'}`;
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(fileContent);
+  } catch (error) {
+    console.error('Error viewing report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error viewing report',
+      error: error.message
+    });
+  }
+});
 
 module.exports = router;

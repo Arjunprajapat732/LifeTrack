@@ -49,6 +49,16 @@ const Navbar = () => {
                 <Link to="/dashboard" className="btn-primary">
                   Dashboard
                 </Link>
+                {user?.role === 'caregiver' && (
+                  <Link to="/caregiver/reports" className="text-gray-700 hover:text-primary-600 transition-colors">
+                    Reports
+                  </Link>
+                )}
+                {user?.role === 'patient' && (
+                  <Link to="/patient/reports" className="text-gray-700 hover:text-primary-600 transition-colors">
+                    My Reports
+                  </Link>
+                )}
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4 text-gray-600" />
                   <span className="text-gray-700">{user?.firstName}</span>
@@ -120,6 +130,24 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
+                {user?.role === 'caregiver' && (
+                  <Link
+                    to="/caregiver/reports"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Reports
+                  </Link>
+                )}
+                {user?.role === 'patient' && (
+                  <Link
+                    to="/patient/reports"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    My Reports
+                  </Link>
+                )}
                 <div className="px-3 py-2 text-gray-700">
                   Welcome, {user?.firstName}
                 </div>

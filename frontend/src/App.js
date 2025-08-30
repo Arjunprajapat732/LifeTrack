@@ -8,6 +8,10 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import ReportsIndex from './pages/caregiver/reports/index';
+import ReportDetail from './pages/caregiver/reports/detail';
+import PatientReportsIndex from './pages/patient/reports/index';
+import PatientReportDetail from './pages/patient/reports/detail';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -26,6 +30,38 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="caregiver/reports" 
+              element={
+                <ProtectedRoute>
+                  <ReportsIndex />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="caregiver/reports/detail/:reportId" 
+              element={
+                <ProtectedRoute>
+                  <ReportDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="patient/reports" 
+              element={
+                <ProtectedRoute>
+                  <PatientReportsIndex />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="patient/reports/detail/:reportId" 
+              element={
+                <ProtectedRoute>
+                  <PatientReportDetail />
                 </ProtectedRoute>
               } 
             />
