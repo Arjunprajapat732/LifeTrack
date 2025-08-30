@@ -206,35 +206,29 @@ const CaregiverDashboard = () => {
                          <div className="card">
                <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
                <div className="space-y-3">
-                 <button 
-                   className="w-full btn-primary text-left"
-                   onClick={() => navigate('/caregiver/add-patient')}
-                 >
-                   Add New Patient
-                 </button>
-                 <button className="w-full btn-secondary text-left">
-                   Schedule Visit
-                 </button>
-                 <button 
-                   onClick={() => navigate('/caregiver/reports')}
-                   className="w-full btn-healthcare text-left"
-                 >
-                   View All Reports
-                 </button>
-                {user?.role === 'caregiver' && (
+                                   <button 
+                    className="w-full btn-primary text-left"
+                    onClick={() => navigate('/caregiver/add-patient')}
+                  >
+                    Add New Patient
+                  </button>
                   <button 
-                    onClick={() => navigate('/caregiver/task-calendar')}
+                    onClick={() => navigate('/caregiver/reports')}
                     className="w-full btn-healthcare text-left"
                   >
-                    Task
+                    View All Reports
                   </button>
-                )}
-                    <button className="w-full btn-warm text-left">
-                   Generate Report
-                 </button>
-                 <button className="w-full btn-secondary text-left">
-                   Record Vital Signs
-                 </button>
+                                 {user?.role === 'caregiver' && (
+                   <button 
+                     onClick={() => navigate('/caregiver/task-calendar')}
+                     className="w-full btn-healthcare text-left"
+                   >
+                     Schedule Appointment
+                   </button>
+                 )}
+                  <button className="w-full btn-secondary text-left">
+                    Record Vital Signs
+                  </button>
                  <button 
                    onClick={() => setShowHealthAssistance(true)}
                    className="w-full btn-primary text-left flex items-center space-x-2"

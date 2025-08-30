@@ -437,9 +437,6 @@ const PatientDashboard = () => {
                  >
                    Upload Report
                  </button>
-                 <button className="w-full btn-healthcare text-left">
-                   Schedule Appointment
-                 </button>
                  <button className="w-full btn-secondary text-left">
                    Contact Caregiver
                  </button>

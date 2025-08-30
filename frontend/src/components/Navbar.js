@@ -46,22 +46,15 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link to="/dashboard" className="btn-primary">
-                  Dashboard
-                </Link>
-                {user?.role === 'caregiver' && (
-                  <Link to="/caregiver/reports" className="text-gray-700 hover:text-primary-600 transition-colors">
-                    Reports
-                  </Link>
-                )}
-                {user?.role === 'patient' && (
-                  <Link to="/patient/reports" className="text-gray-700 hover:text-primary-600 transition-colors">
-                    My Reports
-                  </Link>
-                )}
+                                 <Link to="/dashboard" className="btn-primary">
+                   Dashboard
+                 </Link>
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4 text-gray-600" />
-                  <span className="text-gray-700">{user?.firstName}</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-700 text-sm font-medium">{user?.firstName}</span>
+                    <span className="text-gray-500 text-xs capitalize">{user?.role}</span>
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -123,33 +116,18 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="block px-3 py-2 text-primary-600 font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                {user?.role === 'caregiver' && (
-                  <Link
-                    to="/caregiver/reports"
-                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Reports
-                  </Link>
-                )}
-                {user?.role === 'patient' && (
-                  <Link
-                    to="/patient/reports"
-                    className="block px-3 py-2 text-gray-700 hover:text-primary-600 transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    My Reports
-                  </Link>
-                )}
+                                 <Link
+                   to="/dashboard"
+                   className="block px-3 py-2 text-primary-600 font-medium"
+                   onClick={() => setIsOpen(false)}
+                 >
+                   Dashboard
+                 </Link>
                 <div className="px-3 py-2 text-gray-700">
-                  Welcome, {user?.firstName}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">Welcome, {user?.firstName}</span>
+                    <span className="text-gray-500 text-xs capitalize">{user?.role}</span>
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}
