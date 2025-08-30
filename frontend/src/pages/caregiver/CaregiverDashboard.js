@@ -29,6 +29,7 @@ const CaregiverDashboard = () => {
     fetchPatients();
   }, []);
 
+
   // Fetch all reports
   useEffect(() => {
     const fetchReports = async () => {
@@ -39,9 +40,10 @@ const CaregiverDashboard = () => {
         console.error('Error fetching reports:', error);
       }
     };
-
     fetchReports();
   }, []);
+
+  // Only show Task button if logged-in user is a caregiver
 
   // View patient details
   const viewPatientDetails = (patient) => {
@@ -206,12 +208,21 @@ const CaregiverDashboard = () => {
                  >
                    View All Reports
                  </button>
+                {user?.role === 'caregiver' && (
+                  <button 
+                    onClick={() => navigate('/caregiver/task-calendar')}
+                    className="w-full btn-healthcare text-left"
+                  >
+                    Task
+                  </button>
+                )}
+                    <button className="w-full btn-warm text-left">
+                   Generate Report
+                 </button>
                  <button className="w-full btn-secondary text-left">
                    Record Vital Signs
                  </button>
-                 <button className="w-full btn-warm text-left">
-                   Generate Report
-                 </button>
+              
                </div>
              </div>
 

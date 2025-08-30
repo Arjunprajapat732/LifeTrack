@@ -11,8 +11,10 @@ import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import ReportsIndex from './pages/caregiver/reports/index';
 import ReportDetail from './pages/caregiver/reports/detail';
+import CaregiverTaskCalendarPage from './pages/caregiver/TaskCalendarPage';
 import PatientReportsIndex from './pages/patient/reports/index';
 import PatientReportDetail from './pages/patient/reports/detail';
+import PatientTaskCalendarPage from './pages/patient/TaskCalendarPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -45,6 +47,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+             <Route 
+               path="caregiver/task-calendar" 
+               element={
+                 <ProtectedRoute>
+                   <CaregiverTaskCalendarPage />
+                 </ProtectedRoute>
+               } 
+             />
             <Route 
               path="caregiver/reports/detail/:reportId" 
               element={
@@ -69,6 +79,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+             <Route 
+               path="patient/task-calendar" 
+               element={
+                 <ProtectedRoute>
+                   <PatientTaskCalendarPage />
+                 </ProtectedRoute>
+               } 
+             />
           </Route>
       <Route path="admin/dashboard" element={<AdminDashboard />} />
     </Routes>

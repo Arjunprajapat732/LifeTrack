@@ -447,6 +447,14 @@ const PatientDashboard = () => {
                  >
                    View Reports
                  </button>
+                {user?.role === 'caregiver' && (
+                  <button 
+                    onClick={() => navigate('/patient/task-calendar')}
+                    className="w-full btn-healthcare text-left"
+                  >
+                    Task
+                  </button>
+                )}
                </div>
              </div>
 
