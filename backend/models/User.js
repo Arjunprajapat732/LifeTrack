@@ -61,6 +61,12 @@ const userSchema = new mongoose.Schema({
     state: String,
     zipCode: String,
     country: String
+  },
+  // For patients: reference to their caregiver
+  caregiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: function() { return this.role === 'patient'; },
   }
 }, {
   timestamps: true

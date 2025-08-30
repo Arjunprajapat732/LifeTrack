@@ -59,12 +59,20 @@ const CaregiverDashboard = () => {
     setShowReportsModal(true);
   };
 
-  // Filter patients based on search term
-  const filteredPatients = patients.filter(patient => 
-    patient.patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.patient.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter patients: only show those associated with this caregiver (user._id), and match search
+  const filteredPatients = patients
+    .filter(patientData => {
+      // patientData.patient.caregiverId should match user._id
+      // fallback: show all if caregiverId is not set (for backward compatibility)
+      return (
+        (!patientData.patient.caregiverId || patientData.patient.caregiverId === user?._id) &&
+        (
+          patientData.patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patientData.patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patientData.patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    });
 
   return (
     <div className="min-h-screen bg-gradient-bg">
@@ -198,7 +206,10 @@ const CaregiverDashboard = () => {
                          <div className="card">
                <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
                <div className="space-y-3">
-                 <button className="w-full btn-primary text-left">
+                 <button 
+                   className="w-full btn-primary text-left"
+                   onClick={() => navigate('/caregiver/add-patient')}
+                 >
                    Add New Patient
                  </button>
                  <button className="w-full btn-secondary text-left">

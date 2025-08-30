@@ -200,8 +200,8 @@ exports.getAllPatientsStatus = async (req, res) => {
       });
     }
 
-    // Get all patients
-    const patients = await User.find({ role: 'patient' });
+  // Get only patients for this caregiver
+  const patients = await User.find({ role: 'patient', caregiverId: req.user.id });
     
     // Get latest status for each patient
     const patientsWithStatus = await Promise.all(

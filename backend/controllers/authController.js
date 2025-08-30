@@ -101,7 +101,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    const { firstName, lastName, email, password, phone, role } = req.body;
+  const { firstName, lastName, email, password, phone, role, caregiverId } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -112,15 +112,20 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create new user
-    const user = new User({
+
+    // Create new user, attach caregiverId if patient
+    const userData = {
       firstName,
       lastName,
       email,
       password,
       phone,
       role: role || 'patient'
-    });
+    };
+    if ((role === 'patient' || !role) && caregiverId) {
+      userData.caregiverId = caregiverId;
+    }
+    const user = new User(userData);
 
     await user.save();
 

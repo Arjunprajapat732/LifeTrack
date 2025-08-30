@@ -1,37 +1,38 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Lock, Phone } from 'lucide-react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const SignUp = () => {
+const AddPatient = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register: registerUser } = useAuth();
   const navigate = useNavigate();
-
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors }
   } = useForm();
-
   const password = watch('password');
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const result = await registerUser(data);
-      if (result.success) {
-        toast.success('Registration successful! Welcome to LifeTrack.');
-        navigate('/dashboard');
+      // Always set role to 'patient' and add caregiverId
+      const payload = { ...data, role: 'patient', caregiverId: user?._id };
+      const result = await axios.post('/api/auth/register', payload);
+      if (result.data.success) {
+        toast.success('Patient registered successfully!');
+        navigate(-1); // Go back to previous page
       } else {
-        toast.error(result.error || 'Registration failed');
+        toast.error(result.data.message || 'Registration failed');
       }
     } catch (error) {
-      toast.error('An error occurred during registration');
+      toast.error(error.response?.data?.message || 'An error occurred during registration');
     } finally {
       setIsLoading(false);
     }
@@ -46,19 +47,14 @@ const SignUp = () => {
               <span className="text-white font-bold text-lg">LT</span>
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-gray-600">
-            Join LifeTrack and transform your healthcare practice
-          </p>
+          <h2 className="text-3xl font-bold text-gray-900">Add New Patient</h2>
+          <p className="mt-2 text-gray-600">Register a new patient in the system</p>
         </div>
-
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
@@ -68,47 +64,31 @@ const SignUp = () => {
                     type="text"
                     {...register('firstName', {
                       required: 'First name is required',
-                      minLength: {
-                        value: 2,
-                        message: 'First name must be at least 2 characters'
-                      }
+                      minLength: { value: 2, message: 'First name must be at least 2 characters' }
                     })}
                     className="input-field pl-10"
                     placeholder="First name"
                   />
                 </div>
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-                )}
+                {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>}
               </div>
-
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                 <input
                   id="lastName"
                   type="text"
                   {...register('lastName', {
                     required: 'Last name is required',
-                    minLength: {
-                      value: 2,
-                      message: 'Last name must be at least 2 characters'
-                    }
+                    minLength: { value: 2, message: 'Last name must be at least 2 characters' }
                   })}
                   className="input-field"
                   placeholder="Last name"
                 />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-                )}
+                {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>}
               </div>
             </div>
-
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
@@ -124,18 +104,13 @@ const SignUp = () => {
                     }
                   })}
                   className="input-field pl-10"
-                  placeholder="Enter your email"
+                  placeholder="Enter email"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
             </div>
-
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number (Optional)
-              </label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number (Optional)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Phone className="h-5 w-5 text-gray-400" />
@@ -153,18 +128,12 @@ const SignUp = () => {
                   placeholder="Phone number"
                 />
               </div>
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-              )}
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
             </div>
-
-            {/* Role is always caregiver, hidden input */}
-            <input type="hidden" value="caregiver" {...register('role')} />
-
+            {/* Role is always patient, hidden input */}
+            <input type="hidden" value="patient" {...register('role')} />
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -174,10 +143,7 @@ const SignUp = () => {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', {
                     required: 'Password is required',
-                    minLength: {
-                      value: 8,
-                      message: 'Password must be at least 8 characters'
-                    },
+                    minLength: { value: 8, message: 'Password must be at least 8 characters' },
                     pattern: {
                       value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
                       message: 'Password must contain uppercase, lowercase, and number'
@@ -191,22 +157,13 @@ const SignUp = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
             </div>
-
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
               <input
                 id="confirmPassword"
                 type="password"
@@ -217,35 +174,8 @@ const SignUp = () => {
                 className="input-field"
                 placeholder="Confirm your password"
               />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-              )}
+              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>}
             </div>
-
-            <div className="flex items-center">
-              <input
-                id="terms"
-                type="checkbox"
-                {...register('terms', {
-                  required: 'You must accept the terms and conditions'
-                })}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{' '}
-                <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-                  Terms and Conditions
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-            {errors.terms && (
-              <p className="text-sm text-red-600">{errors.terms.message}</p>
-            )}
-
             <div>
               <button
                 type="submit"
@@ -255,24 +185,15 @@ const SignUp = () => {
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 ) : (
-                  'Create Account'
+                  'Add Patient'
                 )}
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium">
-                Sign in here
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default SignUp;
+export default AddPatient;

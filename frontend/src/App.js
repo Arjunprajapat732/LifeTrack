@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -18,6 +17,8 @@ import PatientTaskCalendarPage from './pages/patient/TaskCalendarPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AddPatient from './pages/caregiver/AddPatient';
+
 
 function App() {
   return (
@@ -25,6 +26,14 @@ function App() {
       <div className="App min-h-screen bg-gradient-bg">
         <Routes>
           <Route path="/" element={<Layout />}>
+            <Route 
+              path="caregiver/add-patient" 
+              element={
+                <ProtectedRoute>
+                  <AddPatient />
+                </ProtectedRoute>
+              } 
+            />
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
