@@ -284,10 +284,98 @@ const extractMedicalInformation = async (filePath, informationTypes = ['vitals',
   }
 };
 
+/**
+ * Provide health assistance using AI
+ * @param {string} userQuestion - The user's health-related question
+ * @param {string} userRole - The user's role (patient or caregiver)
+ * @param {Object} userContext - Additional user context (optional)
+ * @returns {Promise<Object>} AI response for health assistance
+ */
+const provideHealthAssistance = async (userQuestion, userRole = 'patient', userContext = {}) => {
+  try {
+    // Build context-aware prompt based on user role
+    let systemPrompt = `You are a helpful AI health assistant. Provide accurate, helpful, and safe health information. 
+    
+IMPORTANT GUIDELINES:
+- Always encourage consulting healthcare professionals for serious medical concerns
+- Provide general health information and guidance
+- Be compassionate and supportive
+- Use simple, easy-to-understand language
+- Include relevant warnings when appropriate
+- Never provide specific medical diagnoses or treatment recommendations
+- Always suggest consulting a doctor for serious symptoms
+
+User Role: ${userRole}`;
+
+    if (userRole === 'patient') {
+      systemPrompt += `
+
+For patients, focus on:
+- General health education and lifestyle advice
+- Understanding symptoms and when to seek medical help
+- Medication and treatment compliance
+- Healthy lifestyle recommendations
+- Stress management and mental health support`;
+    } else if (userRole === 'caregiver') {
+      systemPrompt += `
+
+For caregivers, focus on:
+- Patient care best practices
+- Monitoring and observation techniques
+- Communication with healthcare providers
+- Care coordination and planning
+- Self-care for caregivers
+- Emergency response guidance`;
+    }
+
+    // Add user context if provided
+    if (userContext.age) {
+      systemPrompt += `\nPatient Age: ${userContext.age}`;
+    }
+    if (userContext.medicalConditions) {
+      systemPrompt += `\nRelevant Medical Conditions: ${userContext.medicalConditions}`;
+    }
+    if (userContext.medications) {
+      systemPrompt += `\nCurrent Medications: ${userContext.medications}`;
+    }
+
+    // Call OpenAI API
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userQuestion
+        }
+      ],
+      max_tokens: 800,
+      temperature: 0.7
+    });
+
+    return {
+      success: true,
+      response: response.choices[0].message.content,
+      model: response.model,
+      usage: response.usage,
+      userRole,
+      userContext
+    };
+
+  } catch (error) {
+    console.error('Error providing health assistance:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   analyzeMedicalReport,
   analyzeMedicalReportWithContext,
   extractMedicalInformation,
+  provideHealthAssistance,
   convertFileToBase64,
   getMimeType
 };

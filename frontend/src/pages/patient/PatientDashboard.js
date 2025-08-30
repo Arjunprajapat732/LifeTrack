@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Calendar, Pill, Activity, Bell, Clock, TrendingUp, FileText, Upload, Download, Eye } from 'lucide-react';
+import { Heart, Calendar, Pill, Activity, Bell, Clock, TrendingUp, FileText, Upload, Download, Eye, MessageCircle } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import HealthAssistance from '../../components/HealthAssistance';
 
 const PatientDashboard = () => {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ const PatientDashboard = () => {
     tags: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showHealthAssistance, setShowHealthAssistance] = useState(false);
 
   // Fetch patient status every 15 seconds
   useEffect(() => {
@@ -447,6 +449,13 @@ const PatientDashboard = () => {
                  >
                    View Reports
                  </button>
+                 <button 
+                   onClick={() => setShowHealthAssistance(true)}
+                   className="w-full btn-primary text-left flex items-center space-x-2"
+                 >
+                   <MessageCircle className="w-4 h-4" />
+                   <span>AI Health Assistant</span>
+                 </button>
                 {user?.role === 'caregiver' && (
                   <button 
                     onClick={() => navigate('/patient/task-calendar')}
@@ -659,6 +668,13 @@ const PatientDashboard = () => {
            )}
          </div>
        </div>
+
+       {/* AI Health Assistance Modal */}
+       <HealthAssistance 
+         isOpen={showHealthAssistance}
+         onClose={() => setShowHealthAssistance(false)}
+         userRole="patient"
+       />
      </div>
    );
  };

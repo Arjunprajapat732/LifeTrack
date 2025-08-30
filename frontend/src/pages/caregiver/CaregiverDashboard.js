@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Calendar, Activity, Bell, Heart, Clock, Users, FileText, Eye, Download, Search } from 'lucide-react';
+import { User, Calendar, Activity, Bell, Heart, Clock, Users, FileText, Eye, Download, Search, MessageCircle } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import HealthAssistance from '../../components/HealthAssistance';
 
 const CaregiverDashboard = () => {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ const CaregiverDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
+  const [showHealthAssistance, setShowHealthAssistance] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all patients and their status
@@ -221,6 +223,13 @@ const CaregiverDashboard = () => {
                  </button>
                  <button className="w-full btn-secondary text-left">
                    Record Vital Signs
+                 </button>
+                 <button 
+                   onClick={() => setShowHealthAssistance(true)}
+                   className="w-full btn-primary text-left flex items-center space-x-2"
+                 >
+                   <MessageCircle className="w-4 h-4" />
+                   <span>AI Health Assistant</span>
                  </button>
               
                </div>
@@ -459,6 +468,13 @@ const CaregiverDashboard = () => {
            </div>
          </div>
        )}
+
+       {/* AI Health Assistance Modal */}
+       <HealthAssistance 
+         isOpen={showHealthAssistance}
+         onClose={() => setShowHealthAssistance(false)}
+         userRole="caregiver"
+       />
      </div>
    );
  };

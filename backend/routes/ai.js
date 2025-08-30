@@ -4,7 +4,8 @@ const auth = require('../middlewares/auth');
 const { 
   analyzeMedicalReport, 
   analyzeMedicalReportWithContext, 
-  extractMedicalInformation 
+  // extractMedicalInformation,
+  provideHealthAssistance
 } = require('../controllers/aiController');
 const multer = require('multer');
 const path = require('path');
@@ -139,6 +140,8 @@ router.post('/analyze-report-with-context', auth, upload.single('report'), async
  * @desc    Extract specific information from medical report
  * @access  Private
  */
+// Temporarily disabled due to import issues
+/*
 router.post('/extract-information', auth, upload.single('report'), async (req, res) => {
   try {
     if (!req.file) {
@@ -181,6 +184,7 @@ router.post('/extract-information', auth, upload.single('report'), async (req, r
     });
   }
 });
+*/
 
 /**
  * @route   POST /api/ai/analyze-existing-report
@@ -223,6 +227,42 @@ router.post('/analyze-existing-report', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to analyze existing medical report'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/ai/health-assistance
+ * @desc    Provide AI health assistance for patients and caregivers
+ * @access  Private
+ */
+router.post('/health-assistance', auth, async (req, res) => {
+  try {
+    const { question, userContext } = req.body;
+    const userRole = req.user.role || 'patient';
+
+    if (!question || question.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Question is required'
+      });
+    }
+
+    // Provide health assistance
+    const result = await provideHealthAssistance(question, userRole, userContext || {});
+    
+    res.json({
+      success: true,
+      data: result,
+      message: 'Health assistance provided successfully'
+    });
+
+  } catch (error) {
+    console.error('Error in health-assistance route:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to provide health assistance'
     });
   }
 });
