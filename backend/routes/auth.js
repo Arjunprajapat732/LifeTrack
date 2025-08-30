@@ -1,9 +1,26 @@
+
 const express = require('express');
 const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const { auth } = require('../middlewares/auth');
 
 const router = express.Router();
+
+// Get all users (admin only)
+router.get('/users', auth, async (req, res) => {
+  try {
+    // Only allow admin
+    const user = req.user || (req.userId && await require('../models/User').findById(req.userId));
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    const users = await require('../models/User').find({}, '-password').sort({ createdAt: -1 });
+    res.json({ success: true, data: { users, total: users.length } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 // Validation middleware
 const registerValidation = [
@@ -58,6 +75,12 @@ const changePasswordValidation = [
 // Routes
 router.post('/register', registerValidation, authController.register);
 router.post('/login', loginValidation, authController.login);
+
+// Admin login route
+router.post('/admin-login', [
+  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email address'),
+  body('password').notEmpty().withMessage('Password is required')
+], authController.adminLogin);
 router.get('/me', auth, authController.getMe);
 router.put('/profile', auth, authController.updateProfile);
 router.put('/change-password', auth, changePasswordValidation, authController.changePassword);

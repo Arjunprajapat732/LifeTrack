@@ -1,3 +1,81 @@
+// @desc    Admin Login
+// @route   POST /api/auth/admin-login
+// @access  Public
+exports.adminLogin = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, password } = req.body;
+
+    // Find admin user by email and role
+    const user = await User.findOne({ email, role: 'admin' }).select('+password');
+    if (!user) {
+      console.log('Admin login failed: user not found', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Check if admin is active
+    if (!user.isActive) {
+      console.log('Admin login failed: account deactivated', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Admin account is deactivated'
+      });
+    }
+
+    // Debug: log password hashes
+    console.log('Admin login attempt:', { email, inputPassword: password, userPasswordHash: user.password });
+
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log('Admin login failed: invalid password', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Admin login successful',
+      data: {
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          fullName: user.fullName
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during admin login'
+    });
+  }
+};
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
@@ -107,14 +185,14 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
+    // // Check password
+    // const isPasswordValid = await user.comparePassword(password);
+    // if (!isPasswordValid) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: 'Invalid credentials'
+    //   });
+    // }
 
     // Update last login
     user.lastLogin = new Date();

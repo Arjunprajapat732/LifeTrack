@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -13,6 +14,8 @@ import ReportDetail from './pages/caregiver/reports/detail';
 import PatientReportsIndex from './pages/patient/reports/index';
 import PatientReportDetail from './pages/patient/reports/detail';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
   return (
@@ -25,6 +28,7 @@ function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<SignUp />} />
+            <Route path="admin" element={<AdminLogin />} />
             <Route 
               path="dashboard" 
               element={
@@ -66,7 +70,8 @@ function App() {
               } 
             />
           </Route>
-        </Routes>
+      <Route path="admin/dashboard" element={<AdminDashboard />} />
+    </Routes>
       </div>
     </AuthProvider>
   );
