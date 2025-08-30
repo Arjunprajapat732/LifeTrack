@@ -7,10 +7,9 @@ import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-      <Toaster
+  <BrowserRouter>
+    <App />
+    <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -35,5 +34,4 @@ root.render(
         }}
       />
     </BrowserRouter>
-  </React.StrictMode>
-);
+  );

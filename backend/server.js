@@ -8,6 +8,9 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contact');
+const patientStatusRoutes = require('./routes/patientStatus');
+const reportRoutes = require('./routes/reports');
+const reportUploadRoutes = require('./routes/reportUpload');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,20 +25,51 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting - more lenient in development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 requests in development, 100 in production
+  message: {
+    error: 'Too many requests, please try again later.',
+    retryAfter: Math.ceil(15 * 60 / 1000) // 15 minutes in seconds
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Specific rate limiter for patient status (more lenient for frequent updates)
+const patientStatusLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === 'production' ? 60 : 300, // 300 requests per minute in development
+  message: {
+    error: 'Too many status requests, please slow down.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/patient-status', patientStatusLimiter, patientStatusRoutes); // Apply specific limiter
+app.use('/api/reports', reportRoutes);
+app.use('/api/report-upload', reportUploadRoutes);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
