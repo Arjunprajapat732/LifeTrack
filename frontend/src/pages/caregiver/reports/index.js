@@ -13,12 +13,12 @@ const ReportsIndex = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Fetch all reports for caregivers
+  // Fetch caregiver's patients reports
   useEffect(() => {
     const fetchReports = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/reports/all-patients');
+        const response = await axios.get('/api/reports/caregiver-patients');
         setReports(response.data.data.reports);
       } catch (error) {
         console.error('Error fetching reports:', error);

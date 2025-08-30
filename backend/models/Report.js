@@ -6,6 +6,10 @@ const reportSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  caregiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   title: {
     type: String,
     required: true,
@@ -71,6 +75,7 @@ const reportSchema = new mongoose.Schema({
 
 // Index for efficient queries
 reportSchema.index({ patientId: 1, createdAt: -1 });
+reportSchema.index({ caregiverId: 1, createdAt: -1 });
 reportSchema.index({ reportType: 1 });
 reportSchema.index({ status: 1 });
 

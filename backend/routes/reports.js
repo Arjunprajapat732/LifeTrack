@@ -7,6 +7,7 @@ const {
   uploadReport,
   getPatientReports,
   getAllPatientsReports,
+  getCaregiverPatientsReports,
   getPatientReportsByCaregiver,
   getReportDetails,
   updateReportStatus,
@@ -72,6 +73,9 @@ router.get('/my-reports', getPatientReports);
 
 // Get all patients reports (for caregivers)
 router.get('/all-patients', getAllPatientsReports);
+
+// Get caregiver's patients reports (filtered by caregiver ID)
+router.get('/caregiver-patients', getCaregiverPatientsReports);
 
 // Get specific patient's reports (for caregivers)
 router.get('/patient/:patientId', getPatientReportsByCaregiver);

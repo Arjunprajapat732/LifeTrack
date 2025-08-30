@@ -74,6 +74,7 @@ const changePasswordValidation = [
 
 // Routes
 router.post('/register', registerValidation, authController.register);
+router.post('/caregiver/register-patient', auth, registerValidation, authController.registerPatient);
 router.post('/login', loginValidation, authController.login);
 
 // Admin login route

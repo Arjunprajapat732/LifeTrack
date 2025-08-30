@@ -22,9 +22,8 @@ const AddPatient = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Always set role to 'patient' and add caregiverId
-      const payload = { ...data, role: 'patient', caregiverId: user?._id };
-      const result = await axios.post('/api/auth/register', payload);
+      // Use the caregiver-specific endpoint for registering patients
+      const result = await axios.post('/api/auth/caregiver/register-patient', data);
       if (result.data.success) {
         toast.success('Patient registered successfully!');
         navigate(-1); // Go back to previous page

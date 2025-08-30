@@ -45,6 +45,10 @@ const reportUploadSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  caregiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -123,6 +127,7 @@ const reportUploadSchema = new mongoose.Schema({
 
 // Indexes for efficient queries
 reportUploadSchema.index({ patientId: 1, createdAt: -1 });
+reportUploadSchema.index({ caregiverId: 1, createdAt: -1 });
 reportUploadSchema.index({ uploadStatus: 1 });
 reportUploadSchema.index({ reportType: 1 });
 reportUploadSchema.index({ uploadedBy: 1 });

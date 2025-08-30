@@ -32,11 +32,11 @@ const CaregiverDashboard = () => {
   }, []);
 
 
-  // Fetch all reports
+  // Fetch caregiver's patients reports
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await axios.get('/api/reports/all-patients');
+        const response = await axios.get('/api/reports/caregiver-patients');
         setReports(response.data.data.reports);
       } catch (error) {
         console.error('Error fetching reports:', error);
@@ -59,20 +59,14 @@ const CaregiverDashboard = () => {
     setShowReportsModal(true);
   };
 
-  // Filter patients: only show those associated with this caregiver (user._id), and match search
-  const filteredPatients = patients
-    .filter(patientData => {
-      // patientData.patient.caregiverId should match user._id
-      // fallback: show all if caregiverId is not set (for backward compatibility)
-      return (
-        (!patientData.patient.caregiverId || patientData.patient.caregiverId === user?._id) &&
-        (
-          patientData.patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patientData.patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patientData.patient.email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    });
+  // Filter patients by search term only (backend already filters by caregiver ID)
+  const filteredPatients = patients.filter(patientData => {
+    return (
+      patientData.patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patientData.patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patientData.patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gradient-bg">
@@ -96,7 +90,7 @@ const CaregiverDashboard = () => {
                </div>
                <div className="ml-4">
                  <p className="text-sm font-medium text-gray-600">Active Patients</p>
-                 <p className="text-2xl font-bold text-gray-900">{patients.length}</p>
+                 <p className="text-2xl font-bold text-gray-900">{filteredPatients.length}</p>
                </div>
              </div>
            </div>

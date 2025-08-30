@@ -11,6 +11,12 @@ exports.initializeUpload = async (req, res) => {
     const { title, description, reportType, tags, category } = req.body;
     const patientId = req.user.id;
 
+    // Get the caregiver ID from the authenticated user
+    let caregiverId = null;
+    if (req.user.role === 'patient' && req.user.caregiverId) {
+      caregiverId = req.user.caregiverId;
+    }
+
     // Create upload record
     const uploadData = {
       title,
@@ -19,6 +25,7 @@ exports.initializeUpload = async (req, res) => {
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
       category: category || 'medical',
       patientId,
+      caregiverId: caregiverId,
       uploadedBy: req.user.id,
       uploadStatus: 'uploading',
       uploadProgress: 0

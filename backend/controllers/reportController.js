@@ -24,10 +24,17 @@ exports.uploadReport = async (req, res) => {
       });
     }
 
+    // Get the caregiver ID from the authenticated user
+    let caregiverId = null;
+    if (req.user.role === 'patient' && req.user.caregiverId) {
+      caregiverId = req.user.caregiverId;
+    }
+
     // For demo purposes, we'll store file info without actual file upload
     // In production, you'd upload to cloud storage (AWS S3, etc.)
     const reportData = {
       patientId: req.user.id,
+      caregiverId: caregiverId,
       title,
       description,
       reportType: reportType || 'other',
@@ -171,6 +178,57 @@ exports.getAllPatientsReports = async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting all patients reports:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving reports',
+      error: error.message
+    });
+  }
+};
+
+// Get caregiver's patients reports (filtered by caregiver ID)
+exports.getCaregiverPatientsReports = async (req, res) => {
+  try {
+    if (req.user.role !== 'caregiver') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only caregivers can view their patients reports'
+      });
+    }
+
+    const { limit = 10, page = 1, patientId, reportType, status } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Filter reports by caregiver ID
+    const filter = { caregiverId: req.user.id };
+    
+    if (patientId) filter.patientId = patientId;
+    if (reportType) filter.reportType = reportType;
+    if (status) filter.status = status;
+
+    const reports = await Report.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(skip)
+      .populate('patientId', 'firstName lastName email')
+      .populate('uploadedBy', 'firstName lastName');
+
+    const total = await Report.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        reports,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          totalItems: total,
+          itemsPerPage: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting caregiver patients reports:', error);
     res.status(500).json({
       success: false,
       message: 'Error retrieving reports',

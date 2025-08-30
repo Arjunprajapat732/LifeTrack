@@ -112,7 +112,6 @@ exports.register = async (req, res) => {
       });
     }
 
-
     // Create new user, attach caregiverId if patient
     const userData = {
       firstName,
@@ -122,8 +121,18 @@ exports.register = async (req, res) => {
       phone,
       role: role || 'patient'
     };
-    if ((role === 'patient' || !role) && caregiverId) {
-      userData.caregiverId = caregiverId;
+    
+    // If creating a patient and caregiverId is provided, use it
+    // If creating a patient and no caregiverId provided but user is authenticated as caregiver, use authenticated user's ID
+    if (role === 'patient' || !role) {
+      if (caregiverId) {
+        userData.caregiverId = caregiverId;
+      } else if (req.user && req.user.role === 'caregiver') {
+        userData.caregiverId = req.user.id;
+      } else {
+        // For public registration, patients don't need a caregiver initially
+        // They can be assigned later
+      }
     }
     const user = new User(userData);
 
@@ -153,6 +162,86 @@ exports.register = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during registration'
+    });
+  }
+};
+
+// @desc    Register patient by caregiver
+// @route   POST /api/auth/caregiver/register-patient
+// @access  Private (Caregiver only)
+exports.registerPatient = async (req, res) => {
+  try {
+    // Check if authenticated user is a caregiver
+    if (req.user.role !== 'caregiver') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only caregivers can register patients'
+      });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed',
+        errors: errors.array() 
+      });
+    }
+
+    const { firstName, lastName, email, password, phone } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create new patient with caregiver ID
+    const userData = {
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      role: 'patient',
+      caregiverId: req.user.id // Automatically set to authenticated caregiver's ID
+    };
+
+    // Validate that caregiverId is set
+    if (!userData.caregiverId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Caregiver ID is required for patient registration'
+      });
+    }
+
+    const user = new User(userData);
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Patient registered successfully',
+      data: {
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          fullName: user.fullName,
+          caregiverId: user.caregiverId
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Patient registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during patient registration'
     });
   }
 };
@@ -246,7 +335,20 @@ exports.getMe = async (req, res) => {
 
     res.json({
       success: true,
-      data: { user }
+      data: { 
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          phone: user.phone,
+          caregiverId: user.caregiverId,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        }
+      }
     });
 
   } catch (error) {
@@ -284,7 +386,20 @@ exports.updateProfile = async (req, res) => {
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { user }
+      data: { 
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          phone: user.phone,
+          caregiverId: user.caregiverId,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        }
+      }
     });
 
   } catch (error) {
